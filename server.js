@@ -20,7 +20,7 @@ morgan = require('morgan');
 //mongoose.connect('mongodb://uberbooster:5vgsdpFn@i!!rnAI7MHUGCI7st@ds023468.mlab.com:23468/motorcyclingweather');
 mongoose.connect(configDB.url);
 //mongoose.connect('mongodb://localhost/motorcyclingWeatherApp');
-require('./config/passport.js')(passport);
+// require('./config/passport.js')(passport);
 var port = process.env.PORT || 9000;
 
 server.use(express.static(path.join(__dirname,'public')));
