@@ -90,6 +90,12 @@
         </body>
 
   <script type="text/javascript">
+    var base = 'https://maps.googleapis.com/maps/api/geocode/json?address=';
+    var placesKey = "AIzaSyDUZaTClpTQGrQ2AZiBnY7VY7Kw_qo3Y7M";
+    var location = 'lat' + 'lng';
+    var radius = radius.get;
+    var types = types.get;
+    var names = name.get;
     var map;
     var infowindow;
 
@@ -224,20 +230,20 @@
     initialize();
 
  //autocomplete for search
-    var place;
-    var autocomplete = new google.maps.places.Autocomplete(zoek);
+     var place;
+     var autocomplete = new google.maps.places.Autocomplete(zoek);
 
-google.maps.event.addListener(autocomplete, 'place_changed', function () {
+      google.maps.event.addListener(autocomplete, 'place_changed', function () {
         place = autocomplete.getPlace();
         console.log(place);
-});
-var place;
-var autocomplete = new google.maps.places.Autocomplete(zoek2);
+   });
+     var place;
+     var autocomplete = new google.maps.places.Autocomplete(zoek2);
 
-google.maps.event.addListener(autocomplete, 'place_changed', function () {
-    place = autocomplete.getPlace();
-    console.log(place);
-});
+       google.maps.event.addListener(autocomplete, 'place_changed', function () {
+         place = autocomplete.getPlace();
+         console.log(place);
+   });
   </script>
  </body>
 </html>
