@@ -90,6 +90,7 @@
         </body>
 
   <script type="text/javascript">
+  $(document).ready(function){
     var base = 'https://maps.googleapis.com/maps/api/geocode/json?address=';
     var placesKey = "AIzaSyDUZaTClpTQGrQ2AZiBnY7VY7Kw_qo3Y7M";
     var location = 'lat' + 'lng';
@@ -243,6 +244,7 @@
        google.maps.event.addListener(autocomplete, 'place_changed', function () {
          place = autocomplete.getPlace();
          console.log(place);
+    }     
    });
   </script>
  </body>
