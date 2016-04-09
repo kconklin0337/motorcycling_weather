@@ -91,161 +91,240 @@
 
   <script type="text/javascript">
   $(document).ready(function){
-    var base = 'https://maps.googleapis.com/maps/api/geocode/json?address=';
-    var placesKey = "AIzaSyDUZaTClpTQGrQ2AZiBnY7VY7Kw_qo3Y7M";
-    var location = 'lat' + 'lng';
-    var radius = radius.get;
-    var types = types.get;
-    var names = name.get;
-    var map;
-    var infowindow;
-
-    function initialize() {
-
-      var styles = [{
-        stylers: [{
-          hue: "#00b2ff"
-        }, {
-          saturation: -50
-        }, {
-          lightness: 7
-        }, {
-          weight: 1
-        }
-
-        ]
-      }, {
-        featureType: "road",
-        elementType: "geometry",
-        stylers: [{
-          lightness: 100
-        }, {
-          visibility: "on"
-        }]
-      }, {
-        featureType: "road",
-        elementType: "labels",
-        stylers: [{
-          visibility: "on"
-        }]
-      }];
-
-      var styledMap = new google.maps.StyledMapType(styles, {
-        name: "Styled Map"
-      });
-
-      var pos = new google.maps.LatLng(29.6520, -82.3250);
-      var center = new google.maps.LatLng(29.6520, -82.3250);
-
-      map = new google.maps.Map(document.getElementById('map'), {
-        mapTypeId: google.maps.MapTypeId.ROADMAP,
-        center: center,
-        zoom: 12,
-        streetViewControl: true,
-        panControl: true,
-        zoomControlOptions: {
-          style: google.maps.ZoomControlStyle.SMALL
-        },
-        mapTypeControlOptions: {
-          mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'map_style']
-        }
-      });
-      var image = 'https://developers.google.com/maps/documentation/javascript/examples/images/beachflag.png';
-      marker = new google.maps.Marker({
-        map: map,
-        animation: google.maps.Animation.DROP,
-        position: pos,
-        icon: image
-      });
+    angular.module('motoWeather')
+      .factory('location', LocationService);
 
 
-     var newPos = new google.maps.LatLng();
-      var request = {
-        location: pos,
-        radius: 5000,
-        types: ['school', 'restaurant', 'park']
-      };
-      infowindow = new google.maps.InfoWindow();
-      var service = new google.maps.places.PlacesService(map);
-      service.nearbySearch(request, callback);
+LocationService.$inject = ['$http'];
+ var base = 'https://maps.googleapis.com/maps/api/geocode/json?address=';
+ var places = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location='
+ var placesKey = "AIzaSyDUZaTClpTQGrQ2AZiBnY7VY7Kw_qo3Y7M";
 
-      map.mapTypes.set('map_style', styledMap);
-      map.setMapTypeId('map_style');
-    }
+$('#get-places').on('click', getPlaces);
 
+ function placesService($http){
+   var city = $('#city').val();
+   var state = $('#state').val();
+   var radius = $('#radius').val();
+   var type = $('#type').val();
+   var name = $('#name').val();
+   var options = {
+     method: 'GET',
+     url: buildLocationUrl(city, state),
+     success: placesSuccess,
+     error: errorHandler,
+  };
+  $.ajax(options);
+   return {
+    getPlaces: getPlaces,
+   };
 
+  function getPlaces(location){
+    return $http.get(base+location)
+  }
 
-    function callback(results, status) {
-      if (status == google.maps.places.PlacesServiceStatus.OK) {
-        for (var i = 0; i < results.length; i++) {
-          createMarker(results[i]);
-        }
-      }
-    }
+  function buildLocationUrl(city, state){
+    var fullUrl = base + city +','+ state + '&' + radius+'=' + '&' + type + '&' + placesKey;
+    return fullUrl;
+  };
 
-    function createMarker(place) {
-      var specific_icon;
-      var school_icon = 'http://www.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png';
-      var food_icon = 'http://www.google.com/intl/en_us/mapfiles/ms/micons/yellow-dot.png';
-      var park_icon = 'http://www.google.com/intl/en_us/mapfiles/ms/micons/green-dot.png';
+  function placesSuccess(placeResults){
+    var lat = placesResults.results[0].geometry.location.lat;
+    var lon = placesResults.results[0].geometry.location.lng;
+    // var raidus =
+    // var type =
+    // var name =
 
-      switch (true) {
-        case (place.types.indexOf('school') != -1):
-          specific_icon = school_icon;
-          break;
-        case (place.types.indexOf('restaurant') != -1):
-          specific_icon = food_icon;
-          break;
-        case (place.types.indexOf('park') != -1):
-          specific_icon = park_icon;
-          break;
-      }
+    var places ={
+      url: buildUrl(lat, lon),
+      dataType: 'jsonp',
+      success: successHandler,
+      error: errorHandler,
+  };
+};
 
-      var placeLoc = place.geometry.location;
-      var marker = new google.maps.Marker({
-        map: map,
-        position: place.geometry.location,
-        icon: specific_icon
-      });
+$.ajax(weather);
+};
+  function buildUrl(long, short){
+    var builtUrl = local +long+','+short;
+    return builtUrl;
+}
+  function successHandler(processData){
+   var source = $('#info').html();
+   var template = Handlebars.compile(source);
+    locationData.dailyTime = moment(processData.daily.data[1].temperatureMaxTime*1000).format('MMMM Do');
+    locationData.dailyTemp = processData.daily.data[1].temperatureMax;
+    locationData.dailyLowTemp = processData.daily.data[1].temperatureMin;
+    locationData.summary = processData.currently.summary;
+  var data = {
+      icon: processData.currently.icon,
+      // hourly: locationData.hourly,
+      currentTime: locationData.currentTime,
+      temperature: processData.currently.apparentTemperature,
+      dailyTemp: locationData.dailyTemp,
+      dailyLowTemp: locationData.dailyLowTemp,
+      dailyTime: locationData.dailyTime,
+      city: locationData.city,
+      state: locationData.state,
+      summary: locationData.summary,
+  };
 
-      placesList = document.getElementById('results');
-
-      placesList.innerHTML += '<p class="' + place.types[0] + '">' + place.name + '</p>';
-
-
-
-      totalSchool = $('.school').size();
-      $('#school').text('Schools: ' + totalSchool);
-      totalFood = $('.restaurants').size();
-      $('#food').text('Restaurants: ' + totalFood);
-      totalParks = $('.park').size();
-      $('#park').text('Parks: ' + totalParks);
-
-      google.maps.event.addListener(marker, 'click', function () {
-        infowindow.setContent(place.name);
-        infowindow.open(map, this);
-
-      });
-    }
-
-    initialize();
-
- //autocomplete for search
-     var place;
-     var autocomplete = new google.maps.places.Autocomplete(zoek);
-
-      google.maps.event.addListener(autocomplete, 'place_changed', function () {
-        place = autocomplete.getPlace();
-        console.log(place);
-   });
-     var place;
-     var autocomplete = new google.maps.places.Autocomplete(zoek2);
-
-       google.maps.event.addListener(autocomplete, 'place_changed', function () {
-         place = autocomplete.getPlace();
-         console.log(place);
-    }     
-   });
+   var html = template(data);
+    $('#test-output').html(html);
+  };
+   function errorHandler(err){
+    console.log(successHandler);
+    console.error(err);
+    console.log(processData)
+  }
+});
+ //           !!MAP!!
+ //    function initialize() {
+ //
+ //      var styles = [{
+ //        stylers: [{
+ //          hue: "#00b2ff"
+ //        }, {
+ //          saturation: -50
+ //        }, {
+ //          lightness: 7
+ //        }, {
+ //          weight: 1
+ //        }
+ //
+ //        ]
+ //      }, {
+ //        featureType: "road",
+ //        elementType: "geometry",
+ //        stylers: [{
+ //          lightness: 100
+ //        }, {
+ //          visibility: "on"
+ //        }]
+ //      }, {
+ //        featureType: "road",
+ //        elementType: "labels",
+ //        stylers: [{
+ //          visibility: "on"
+ //        }]
+ //      }];
+ //
+ //      var styledMap = new google.maps.StyledMapType(styles, {
+ //        name: "Styled Map"
+ //      });
+ //
+ //      var pos = new google.maps.LatLng(29.6520, -82.3250);
+ //      var center = new google.maps.LatLng(29.6520, -82.3250);
+ //
+ //      map = new google.maps.Map(document.getElementById('map'), {
+ //        mapTypeId: google.maps.MapTypeId.ROADMAP,
+ //        center: center,
+ //        zoom: 12,
+ //        streetViewControl: true,
+ //        panControl: true,
+ //        zoomControlOptions: {
+ //          style: google.maps.ZoomControlStyle.SMALL
+ //        },
+ //        mapTypeControlOptions: {
+ //          mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'map_style']
+ //        }
+ //      });
+ //      var image = 'https://developers.google.com/maps/documentation/javascript/examples/images/beachflag.png';
+ //      marker = new google.maps.Marker({
+ //        map: map,
+ //        animation: google.maps.Animation.DROP,
+ //        position: pos,
+ //        icon: image
+ //      });
+ //
+ //
+ //     var newPos = new google.maps.LatLng();
+ //      var request = {
+ //        location: pos,
+ //        radius: 5000,
+ //        types: ['school', 'restaurant', 'park']
+ //      };
+ //      infowindow = new google.maps.InfoWindow();
+ //      var service = new google.maps.places.PlacesService(map);
+ //      service.nearbySearch(request, callback);
+ //
+ //      map.mapTypes.set('map_style', styledMap);
+ //      map.setMapTypeId('map_style');
+ //    }
+ //
+ //
+ //
+ //    function callback(results, status) {
+ //      if (status == google.maps.places.PlacesServiceStatus.OK) {
+ //        for (var i = 0; i < results.length; i++) {
+ //          createMarker(results[i]);
+ //        }
+ //      }
+ //    }
+ //
+ //    function createMarker(place) {
+ //      var specific_icon;
+ //      var school_icon = 'http://www.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png';
+ //      var food_icon = 'http://www.google.com/intl/en_us/mapfiles/ms/micons/yellow-dot.png';
+ //      var park_icon = 'http://www.google.com/intl/en_us/mapfiles/ms/micons/green-dot.png';
+ //
+ //      switch (true) {
+ //        case (place.types.indexOf('school') != -1):
+ //          specific_icon = school_icon;
+ //          break;
+ //        case (place.types.indexOf('restaurant') != -1):
+ //          specific_icon = food_icon;
+ //          break;
+ //        case (place.types.indexOf('park') != -1):
+ //          specific_icon = park_icon;
+ //          break;
+ //      }
+ //
+ //      var placeLoc = place.geometry.location;
+ //      var marker = new google.maps.Marker({
+ //        map: map,
+ //        position: place.geometry.location,
+ //        icon: specific_icon
+ //      });
+ //
+ //      placesList = document.getElementById('results');
+ //
+ //      placesList.innerHTML += '<p class="' + place.types[0] + '">' + place.name + '</p>';
+ //
+ //
+ //
+ //      totalSchool = $('.school').size();
+ //      $('#school').text('Schools: ' + totalSchool);
+ //      totalFood = $('.restaurants').size();
+ //      $('#food').text('Restaurants: ' + totalFood);
+ //      totalParks = $('.park').size();
+ //      $('#park').text('Parks: ' + totalParks);
+ //
+ //      google.maps.event.addListener(marker, 'click', function () {
+ //        infowindow.setContent(place.name);
+ //        infowindow.open(map, this);
+ //
+ //      });
+ //    }
+ //
+ //    initialize();
+ //
+ // //autocomplete for search
+ //     var place;
+ //     var autocomplete = new google.maps.places.Autocomplete(zoek);
+ //
+ //      google.maps.event.addListener(autocomplete, 'place_changed', function () {
+ //        place = autocomplete.getPlace();
+ //        console.log(place);
+ //   });
+ //     var place;
+ //     var autocomplete = new google.maps.places.Autocomplete(zoek2);
+ //
+ //       google.maps.event.addListener(autocomplete, 'place_changed', function () {
+ //         place = autocomplete.getPlace();
+ //         console.log(place);
+ //    }
+ //   });
   </script>
  </body>
 </html>
